@@ -21,8 +21,10 @@ Example 4: ATTRIB.G4B (hd0,0)/recycled
 
 Example 5: ATTRIB.G4B (hd0,0)/recycled/desktop.ini -s
   
-Returns: 
-Get: with ATTRIB.G4B <FILE> echos file/ directory attributes 
+Returns:
+  
+Get: with ATTRIB.G4B <FILE> echos file/ directory attributes
+  
 Set: with ATTRIB.G4B <FILE> <+/-attribute(s)> variable 'result=1' if successfull, nothing if not successfull
   
 Short descritions of each sub-routine at start of each
