@@ -7,7 +7,7 @@ ATTRIB.G4B v0.4 (20220421), by deomsh
 
 Function: get/ set attributes (FAT-devices only)
 
-Use: ATTRIB.G4B FILE [+/-attribute(s)]
+Use: ATTRIB.G4B <FILE> [<+/-attribute(s)>]
 
 Remarks: If source device/ path is not given: on root. Short Names in PATH and FILE only! Spaces between set-attributes possible, not needed
   
@@ -23,8 +23,8 @@ Example 5: ATTRIB.G4B (hd0,0)/recycled/desktop.ini -s
   
 Returns:
   
-Get: with ATTRIB.G4B FILE echos file/ directory attributes
+Get: with ATTRIB.G4B <FILE> echos file/ directory attributes
   
-Set: with ATTRIB.G4B FILE +/-attribute(s) variable 'result=1' if successfull, nothing if not successfull
+Set: with ATTRIB.G4B <FILE> <+/-attribute(s)> variable 'result=1' if successfull, nothing if not successfull
   
 Short descritions of each sub-routine at start of each
