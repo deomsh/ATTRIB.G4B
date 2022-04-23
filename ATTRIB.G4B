@@ -47,14 +47,14 @@ if %bit0%==1 && set r=R ;; if %bit1%==1 && set h=H ;; if %bit2%==1 && set s=S ;;
 if not %mode%==setattrib && endlocal && set r=%r% && set s=%s% && set h=%h% && set v=%v% && set d=%d% && set a=%a% && goto :eof
 if not /i %filesys%==fat32 && if not %entry%>=%root% && endlocal && set result= && goto :eof
 if /i %filesys%==fat32 && if not %entry%>=%dataarea% && endlocal && set result= && goto :eof
-if not %d%==D && call Fn.11 "%~1" "+r" && set bit0=1
-if not %d%==D && call Fn.11 "%~1" "-r" && set bit0=0
+call Fn.11 "%~1" "+r" && set bit0=1
+call Fn.11 "%~1" "-r" && set bit0=0
 call Fn.11 "%~1" "+h" && set bit1=1
 call Fn.11 "%~1" "-h" && set bit1=0
 call Fn.11 "%~1" "+s" && set bit2=1
 call Fn.11 "%~1" "-s" && set bit2=0
-if not %d%==D && call Fn.11 "%~1" "+a" && set bit5=1
-if not %d%==D && call Fn.11 "%~1" "-a" && set bit5=0
+call Fn.11 "%~1" "+a" && set bit5=1
+call Fn.11 "%~1" "-a" && set bit5=0
 set /a bit0=1*%bit0% ;; set /a bit1=2*%bit1% ;; set /a bit2=4*%bit2% ;; set /a bit3=8*%bit3% ;; set /a bit4=16*%bit4% ;; set /a bit5=32*%bit5% ;; set /a bit6=64*%bit6%
 set /A addattr2=%bit0%+%bit1%+%bit2%+%bit3%+%bit4%+%bit5%+%bit6%
 set /A attentry=%entry%+0xB &; raw write --offset=%attentry% %device%%0+%totsect% \x%addattr2:~2% > nul && set result=1
