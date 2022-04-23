@@ -305,7 +305,7 @@ echo -n > (md)%mdbase%+1
 endlocal && set SFN=%SFN% && goto :eof
 
 :help
-echo ATTRIB.G4B v0.4 (20220421), by deomsh
+echo ATTRIB.G4B v0.4.1 (20220423), by deomsh
 echo Function: get/ set attributes (FAT-devices only)
 echo Use: ATTRIB.G4B <FILE> [<+/-attribute(s)>]
 echo Remarks: If source device/ path is not given: on root. Short Names in PATH and FILE only! Spaces between set-attributes possible, not needed
