@@ -25,6 +25,6 @@ Returns:
   
 Get: with ATTRIB.G4B <FILE> echos file/ directory attributes
   
-Set: with ATTRIB.G4B <FILE> <+/-attribute(s)> variable 'result=1' if successfull, nothing if not successfull
+Set: with ATTRIB.G4B <FILE> <+/-attribute(s)> variable 'result=1' if successfull, nothing if not successfull + echo
   
 Short descritions of each sub-routine at start of each
