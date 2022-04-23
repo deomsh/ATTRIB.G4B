@@ -47,8 +47,8 @@ if %bit0%==1 && set r=R ;; if %bit1%==1 && set h=H ;; if %bit2%==1 && set s=S ;;
 if not %mode%==setattrib && endlocal && set r=%r% && set s=%s% && set h=%h% && set v=%v% && set d=%d% && set a=%a% && goto :eof
 if not /i %filesys%==fat32 && if not %entry%>=%root% && endlocal && set result= && goto :eof
 if /i %filesys%==fat32 && if not %entry%>=%dataarea% && endlocal && set result= && goto :eof
-call Fn.11 "%~1" "+r" && set bit0=1
-call Fn.11 "%~1" "-r" && set bit0=0
+if not %d%==D && call Fn.11 "%~1" "+r" && set bit0=1
+if not %d%==D && call Fn.11 "%~1" "-r" && set bit0=0
 call Fn.11 "%~1" "+h" && set bit1=1
 call Fn.11 "%~1" "-h" && set bit1=0
 call Fn.11 "%~1" "+s" && set bit2=1
