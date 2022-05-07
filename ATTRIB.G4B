@@ -1,5 +1,5 @@
 !BAT
-#-#+ ATTRIB.G4B v0.4.1 (20220423), by deomsh
+#-#+ ATTRIB.G4B v0.4.2 (20220507), by deomsh
 #-#+ Function: get/ set attributes (FAT-devices only)
 #-#+ Use: ATTRIB.G4B <FILE> [<+/-attribute(s)>]
 #-#+ Remarks: If source device/ path is not given: on root. Short Names in PATH and FILE only! Spaces between set-attributes possible, not needed
@@ -103,7 +103,8 @@ set /A address=%basemem%+0x1A
 :finddirectoryloop
 set entry= && set success= && set argname= && set argext=
 if not exist entry && cat --skip=%bytedone% --locate="%ENTRY%" --length=%dirlen% --number=1 %device%%0+%totsect% | set entry= &; if exist entry && set entry=0x%entry%
-if exist entry && if not %success%==Y && echo -n > (md)%mdbase%+%clussect% && raw dd if=%device%%0+%totsect% of=(md)%mdbase%+1 bs=1 count=0x20 skip=%entry% > nul && set success=Y
+if exist entry && if not %success%==Y && echo -n > (md)%mdbase%+1 && raw dd if=%device%%0+%totsect% of=(md)%mdbase%+1 bs=1 count=0x20 skip=%entry% > nul && set success=Y
+#BUGGY#if exist entry && if not %success%==Y && echo -n > (md)%mdbase%+%clussect% && raw dd if=%device%%0+%totsect% of=(md)%mdbase%+1 bs=1 count=0x20 skip=%entry% > nul && set success=Y
 if %success%==Y && if /i %filesys%==fat32 && read %address% &; set /A clusnumL=%@retval%&0xffff &; set clusnumL=0000%clusnumL:~2% && set /A address=%address%-0x6 &; read %address% &; set /A clusnumH=%@retval%&0xffff &; if %clusnumH%==0x0 && set /A clusnum=0x%clusnumL:~-4,4% ! set clusnum=%clusnumH%%%clusnumL:~-4,4%
 if %success%==Y && if not /i %filesys%==fat32 && read %address% &; set /A clusnum=%@retval%&0xffff
 if not exist entry && if exist clusnum && if %bytedone%>=%dataarea% && call :lookupFAT "%clusnum%" &; if %clusnum%>=2 && set /A bytedone=%clusnum% - 0x2 * %clussize% + %dataarea% && set /A dirlen=%clussize% && goto :finddirectoryloop
