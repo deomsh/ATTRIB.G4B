@@ -30,7 +30,9 @@ call :bootblockbase "%device%"
 call :findpath "%path%" &; if %clusnum%==0 && echo Path %device%%%path% not found && endlocal && set result= && goto :eof
 call :findfile "%name%%%ext%" &; if not exist entry && echo Entry %device%%%path%%%name%%%ext% not found && endlocal && set result= && goto :eof
 call :attributes "%ATTRIB%"
-if %mode%==getattrib && set /u name=%name% && set /u ext=%ext% && set /u path=%path% &; echo FAT dir:[%path%] && echo %name%%%ext% %a%%%d% %s%%%h%%%r%
+if %mode%==getattrib && set DEV=%~1 &; if not %DEV:~0,1%==( && set /u path=%path%  ! set line=echo && set "null=> nul" &; echo $[0x0F]%device%%%path% %null%
+if %mode%==getattrib && set /u name=%name% && set /u ext=%ext% &; echo %name%%%ext%  %a%%%d% %s%%%h%%%r% &; %line%
+#v0.4.1#if %mode%==getattrib && set /u name=%name% && set /u ext=%ext% && set /u path=%path% &; echo FAT dir:[%path%] && echo %name%%%ext% %a%%%d% %s%%%h%%%r%
 if %mode%==setattrib && if not exist result && echo Attribute(s) %ATTRIB% not set && endlocal && set result= && goto :eof
 endlocal && set result=%result%
 goto :eof
@@ -104,7 +106,7 @@ set /A address=%basemem%+0x1A
 set entry= && set success= && set argname= && set argext=
 if not exist entry && cat --skip=%bytedone% --locate="%ENTRY%" --length=%dirlen% --number=1 %device%%0+%totsect% | set entry= &; if exist entry && set entry=0x%entry%
 if exist entry && if not %success%==Y && echo -n > (md)%mdbase%+1 && raw dd if=%device%%0+%totsect% of=(md)%mdbase%+1 bs=1 count=0x20 skip=%entry% > nul && set success=Y
-#BUGGY#if exist entry && if not %success%==Y && echo -n > (md)%mdbase%+%clussect% && raw dd if=%device%%0+%totsect% of=(md)%mdbase%+1 bs=1 count=0x20 skip=%entry% > nul && set success=Y
+#v0.4#if exist entry && if not %success%==Y && echo -n > (md)%mdbase%+%clussect% && raw dd if=%device%%0+%totsect% of=(md)%mdbase%+1 bs=1 count=0x20 skip=%entry% > nul && set success=Y
 if %success%==Y && if /i %filesys%==fat32 && read %address% &; set /A clusnumL=%@retval%&0xffff &; set clusnumL=0000%clusnumL:~2% && set /A address=%address%-0x6 &; read %address% &; set /A clusnumH=%@retval%&0xffff &; if %clusnumH%==0x0 && set /A clusnum=0x%clusnumL:~-4,4% ! set clusnum=%clusnumH%%%clusnumL:~-4,4%
 if %success%==Y && if not /i %filesys%==fat32 && read %address% &; set /A clusnum=%@retval%&0xffff
 if not exist entry && if exist clusnum && if %bytedone%>=%dataarea% && call :lookupFAT "%clusnum%" &; if %clusnum%>=2 && set /A bytedone=%clusnum% - 0x2 * %clussize% + %dataarea% && set /A dirlen=%clussize% && goto :finddirectoryloop
