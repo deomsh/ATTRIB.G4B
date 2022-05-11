@@ -31,7 +31,14 @@ call :findpath "%path%" &; if %clusnum%==0 && echo Path %device%%%path% not foun
 call :findfile "%name%%%ext%" &; if not exist entry && echo Entry %device%%%path%%%name%%%ext% not found && endlocal && set result= && goto :eof
 call :attributes "%ATTRIB%"
 if %mode%==getattrib && set DEV=%~1 &; if not %DEV:~0,1%==( && set /u path=%path%  ! set line=echo && set "null=> nul" &; echo $[0x0F]%device%%%path% %null%
-if %mode%==getattrib && set /u name=%name% && set /u ext=%ext% &; echo %name%%%ext%  %a%%%d% %s%%%h%%%r% &; %line%
+if %mode%==getattrib && set /u NAME=%name% &; set /a namelen=%@retval% && set /u EXT=%ext:~1% &; set /a extlen=%@retval%
+if %mode%==getattrib && if %namelen%<=7 && call :spread "NAME" "%namelen%" &; set NAME=%NAME%%%spread% && set spread=
+if %mode%==getattrib && if exist ext && if %extlen%<=2 && call :spread "EXT" "%extlen%" &; set EXT=%EXT%%%spread% && set spread=
+if %mode%==getattrib && if not exist a && set a=\x20
+if %mode%==getattrib && if not exist d && set d=\x20
+if %mode%==getattrib && if not exist ext && set EXT=\x20\x20\x20
+if %mode%==getattrib && echo -e $[0x07]%NAME% %EXT%  %a%%%d% %s%%%h%%%r% &; %line%
+#0.4.2=OKE#if %mode%==getattrib && set /u name=%name% && set /u ext=%ext% &; echo -e $[0x07]%name%%%ext%  %a%%%d% %s%%%h%%%r% &; %line%
 #v0.4.1#if %mode%==getattrib && set /u name=%name% && set /u ext=%ext% && set /u path=%path% &; echo FAT dir:[%path%] && echo %name%%%ext% %a%%%d% %s%%%h%%%r%
 if %mode%==setattrib && if not exist result && echo Attribute(s) %ATTRIB% not set && endlocal && set result= && goto :eof
 endlocal && set result=%result%
