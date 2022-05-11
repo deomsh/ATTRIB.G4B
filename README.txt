@@ -3,7 +3,7 @@ Simple grub4dos script to get file/ directory attributes (DA RSH) or set attribu
 
 Help shown with: ATTRIB.G4B
 
-ATTRIB.G4B v0.4.1 (20220423), by deomsh
+ATTRIB.G4B v0.4.2 (20220507), by deomsh
 
 Function: get/ set attributes (FAT-devices only)
 
@@ -23,8 +23,8 @@ Example 5: ATTRIB.G4B (hd0,0)/recycled/desktop.ini -h
   
 Returns:
   
-Get: with ATTRIB.G4B <FILE> echos file/ directory attributes
+Get: with ATTRIB.G4B <FILE> echos FILE-/ DIRECTORY-NAME and file/ directory attributes. DEVICE/PATH/file echod only if on root (not given on commandline)
   
-Set: with ATTRIB.G4B <FILE> <+/-attribute(s)> variable 'result=1' if successfull, nothing if not successfull + echo
+Set: with ATTRIB.G4B <FILE> <+/-attribute(s)> variable 'result=1' if successfull, nothing if not successfull (no echo)
   
 Short descritions of each sub-routine at start of each
