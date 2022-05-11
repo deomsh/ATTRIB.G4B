@@ -40,7 +40,7 @@ goto :eof
 :: SUBROUTINES
 ::----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 :attributes
-#-# get/ set attributes (no set of V and D, A on files only)
+#-# get/ set attributes (no set of V and D)
 setlocal
 set /A address=%basemem%+0xB &; read %address% ;; set /A attrib=%@retval%&0xff
 set /a bit0=%attrib%&1 ;; set /A attrib=%attrib%>>1 ;; set /a bit1=%attrib%&1 ;; set /A attrib=%attrib%>>1 ;; set /a bit2=%attrib%&1 ;; set /A attrib=%attrib%>>1 ;; set /a bit3=%attrib%&1 ;; set /A attrib=%attrib%>>1 ;; set /a bit4=%attrib%&1 ;; set /A attrib=%attrib%>>1 ;; set /a bit5=%attrib%&1 ;; set /A attrib=%attrib%>>1 ;; set /a bit6=%attrib%&1
@@ -80,7 +80,7 @@ endlocal && set clusnum=%clusnum% && set bytedone=%bytedone% && set dirlen=%dirl
 goto :eof
 
 :lsspaces
-#-# replace forward-slash and double-qoutes for spaces
+#-# replace spaces for LS (escaped) spaces: '\ '
 setlocal
 set numspace= && set /A skip=0
 cat --locate=\x20 (md)%mdbase%+1 > nul ;; set /a numspace=%@retval%
@@ -181,7 +181,8 @@ errorcheck off
 debug msg=1
 if exist device && vol %device% > (md)%mdbase%+1
 debug msg=0
-if exist device && set filesys=fat12 &; cat --locatei=%filesys% (md)%mdbase%+1 > nul || set filesys=fat16 &; cat --locatei=%filesys% (md)%mdbase%+1 > nul || set filesys=fat32 &; cat --locatei=%filesys% (md)%mdbase%+1 > nul || set filesys=initrdfs &; cat --locatei=%filesys% (md)%mdbase%+1 > nul || set filesys=
+if exist device && set filesys=fat12 &; cat --locatei=%filesys% (md)%mdbase%+1 > nul |; set filesys=fat16 &; cat --locatei=%filesys% (md)%mdbase%+1 > nul |; set filesys=fat32 &; cat --locatei=%filesys% (md)%mdbase%+1 > nul |; set filesys=initrdfs &; cat --locatei=%filesys% (md)%mdbase%+1 > nul |; set filesys=
+#OKE#if exist device && set filesys=fat12 &; cat --locatei=%filesys% (md)%mdbase%+1 > nul || set filesys=fat16 &; cat --locatei=%filesys% (md)%mdbase%+1 > nul || set filesys=fat32 &; cat --locatei=%filesys% (md)%mdbase%+1 > nul || set filesys=initrdfs &; cat --locatei=%filesys% (md)%mdbase%+1 > nul || set filesys=
 endlocal && set filesys=%filesys%
 goto :eof
 
@@ -194,10 +195,8 @@ dd if=%device%%0+1 of=(md)%mdbase%+1 > nul
 set /A base=%mdbase% * 0x200
 set /A address=%base%+0xB
 read %address% > nul &; set /A bytepsec=%@retval%&0xffff
-#echo bytepsec=%bytepsec%
 set /A address=%base%+0xD
 read %address% > nul ;; set /A secpclus=%@retval%&0xff
-#echo secpclus=%secpclus%
 set /A address=%base%+0xE
 read %address% > nul ;; set /A reserved=%@retval%&0xffff
 set /A address=%base%+0x10
@@ -206,22 +205,10 @@ set /A address=%base%+0x11
 read %address% > nul ;; set /A rootentr=%@retval%&0xffff
 set /A address=%base%+0x13
 read %address% > nul ;; set /A totsect=%@retval%&0xffff
-#echo totsect=%totsect%
-#notneeded#set /A address=%base%+0x15
-#notneeded#read %address% > nul ;; set /A mediabyt=%@retval%&0xff
-#echo mediabyt=%mediabyt%
 set /A address=%base%+0x16
 read %address% > nul ;; set /A secpfat=%@retval%&0xffff
-#echo secpfat=%secpfat%
-#notneeded#set /A address=%base%+0x18
-#notneeded#read %address% > nul ;; set /A secptrac=%@retval%&0xffff
-#notneeded#set /A address=%base%+0x1A
-#notneeded#read %address% > nul ;; set /A numheads=%@retval%&0xffff
-#notneeded#set /A address=%base%+0x1C
-#notneeded#read %address% > nul ;; set /A hiddsect=%@retval%&0xffffffff
 if %totsect%==0 && set /A address=%base%+0x20
 if %totsect%==0 && read %address% > nul &; set /A totsect=%@retval%&0xffffffff
-#echo totsect=%totsect%
 if %secpfat%==0 && if /i %filesys%==fat32 && set /A address=%base%+0x24
 if %secpfat%==0 && if /i %filesys%==fat32 && read %address% > nul &; set /A secpfat=%@retval%&0xffff
 set /A rootbyte=%rootentr% * 32
@@ -231,8 +218,6 @@ if not /i %filesys%==fat32 && set /A root=%fatbyte% + %rsrvbyte%
 set /A dataarea=%rootbyte% + %fatbyte% + %rsrvbyte%
 set /A clussize=%secpclus% * %bytepsec%
 set /A fat1=%rsrvbyte%
-#notneeded#set /A fat2=%fatbyte% / 2 + %rsrvbyte%
-#notneeded#set /A numclus=-%dataarea% / 0x200 + %totsect% / %secpclus%
 endlocal && set dataarea=%dataarea% && set clussize=%clussize% && set root=%root% && set fat1=%fat1% && set totsect=%totsect% && set secpclus=%secpclus%
 goto :eof
 
@@ -308,7 +293,7 @@ echo -n > (md)%mdbase%+1
 endlocal && set SFN=%SFN% && goto :eof
 
 :help
-echo ATTRIB.G4B v0.4.1 (20220423), by deomsh
+echo ATTRIB.G4B v0.4.2 (20220507), by deomsh
 echo Function: get/ set attributes (FAT-devices only)
 echo Use: ATTRIB.G4B <FILE> [<+/-attribute(s)>]
 echo Remarks: If source device/ path is not given: on root. Short Names in PATH and FILE only! Spaces between set-attributes possible, not needed
