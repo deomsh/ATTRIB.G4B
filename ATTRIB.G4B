@@ -1,5 +1,5 @@
 !BAT
-#-#+ ATTRIB.G4B v0.4.2 (20220511), by deomsh
+#-#+ ATTRIB.G4B v0.4.3 (20220526), by deomsh
 #-#+ Function: get/ set attributes (FAT-devices only)
 #-#+ Use: ATTRIB.G4B <FILE> [<+/-attribute(s)>]
 #-#+ Remarks: If source device/ path is not given: on root. Short Names in PATH and FILE only! Spaces between set-attributes possible, not needed
@@ -8,6 +8,7 @@
 #-# Example 3: ATTRIB.G4B msdos.sys -r -s -h
 #-# Example 4: ATTRIB.G4B (hd0,0)/recycled
 #-# Example 5: ATTRIB.G4B (hd0,0)/recycled/desktop.ini -h
+#-# Example 6: ATTRIB.G4B (hd0,0)/VOLUME_N.AME
 ::----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 :: MAIN ROUTINE
 ::----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -37,7 +38,7 @@ if %mode%==getattrib && if exist ext && if %extlen%<=2 && call :spread "EXT" "%e
 if %mode%==getattrib && if not exist a && set a=\x20
 if %mode%==getattrib && if not exist d && set d=\x20
 if %mode%==getattrib && if not exist ext && set EXT=\x20\x20\x20
-if %mode%==getattrib && echo -e $[0x07]%NAME% %EXT%  %a%%%d% %s%%%h%%%r% &; %line%
+if %mode%==getattrib && echo -e $[0x07]%NAME% %EXT%  %a%%%d% %s%%%h%%%r%%%v% &; %line%
 #0.4.2=OKE#if %mode%==getattrib && set /u name=%name% && set /u ext=%ext% &; echo -e $[0x07]%name%%%ext%  %a%%%d% %s%%%h%%%r% &; %line%
 #v0.4.1#if %mode%==getattrib && set /u name=%name% && set /u ext=%ext% && set /u path=%path% &; echo FAT dir:[%path%] && echo %name%%%ext% %a%%%d% %s%%%h%%%r%
 if %mode%==setattrib && if not exist result && echo Attribute(s) %ATTRIB% not set && endlocal && set result= && goto :eof
@@ -54,6 +55,8 @@ set /a bit0=%attrib%&1 ;; set /A attrib=%attrib%>>1 ;; set /a bit1=%attrib%&1 ;;
 if %bit0%==1 && set r=R ;; if %bit1%==1 && set h=H ;; if %bit2%==1 && set s=S ;; if %bit3%==1 && set v=V ;; if %bit4%==1 && set d=D ;; if %bit5%==1 && set a=A
 #BUG#if %bit0%==1 && set r=R ;; if %bit1%==1 && set s=S ;; if %bit2%==1 && set h=H ;; if %bit3%==1 && set v=V ;; if %bit4%==1 && set d=D ;; if %bit5%==1 && set a=A
 if not %mode%==setattrib && endlocal && set r=%r% && set s=%s% && set h=%h% && set v=%v% && set d=%d% && set a=%a% && goto :eof
+#BAD# Changed attributes of highcase Volume label written as 8+3
+if %mode%==setattrib && if %v%==V && endlocal && set result= && echo -e Volume label '%ENTRY%' found: attributes can not be changed && goto :eof
 if not /i %filesys%==fat32 && if not %entry%>=%root% && endlocal && set result= && goto :eof
 if /i %filesys%==fat32 && if not %entry%>=%dataarea% && endlocal && set result= && goto :eof
 call Fn.11 "%~1" "+r" && set bit0=1 && set changed=Y
@@ -300,7 +303,7 @@ echo -n > (md)%mdbase%+1
 endlocal && set SFN=%SFN% && goto :eof
 
 :help
-echo ATTRIB.G4B v0.4.2 (20220511), by deomsh
+echo ATTRIB.G4B v0.4.3 (20220526), by deomsh
 echo Function: get/ set attributes (FAT-devices only)
 echo Use: ATTRIB.G4B <FILE> [<+/-attribute(s)>]
 echo Remarks: If source device/ path is not given: on root. Short Names in PATH and FILE only! Spaces between set-attributes possible, not needed
@@ -309,4 +312,5 @@ echo Example 2: ATTRIB.G4B (fd0)/IO.SYS +r+s+h
 echo Example 3: ATTRIB.G4B msdos.sys -r -s -h
 echo Example 4: ATTRIB.G4B (hd0,0)/recycled
 echo Example 5: ATTRIB.G4B (hd0,0)/recycled/desktop.ini -h
+echo Example 6: ATTRIB.G4B (hd0,0)/VOLUME_N.AME
 goto :eof
