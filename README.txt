@@ -1,7 +1,7 @@
 # ATTRIB.G4B
 Simple grub4dos script to get file/ directory attributes (DA RSH) or set attributes on files (A RSH) and directories (A RSH). Short File Names on FAT file-systems only.
 
-Special case: Volume Name (attribute 'V') if input is in 8+3 format
+Special case: Volume Name (attribute 'V') if Volume-name is given in 8+3 File-name format
 
 Help shown with: ATTRIB.G4B
 
@@ -23,7 +23,7 @@ Example 4: ATTRIB.G4B (hd0,0)/recycled
 
 Example 5: ATTRIB.G4B (hd0,0)/recycled/desktop.ini -h
 
-echo Example 6: ATTRIB.G4B (hd0,0)/VOLUME_N.AME
+Example 6: ATTRIB.G4B (hd0,0)/VOLUME_N.AME
   
 Returns:
   
