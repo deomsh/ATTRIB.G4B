@@ -1,5 +1,5 @@
 !BAT
-#-#+ ATTRIB.G4B v0.4.3 (20220526), by deomsh
+#-#+ ATTRIB.G4B v0.4.4 (20220613), by deomsh
 #-#+ Function: get/ set attributes (FAT-devices only)
 #-#+ Use: ATTRIB.G4B <FILE> [<+/-attribute(s)>]
 #-#+ Remarks: If source device/ path is not given: on root. Short Names in PATH and FILE only! Spaces between set-attributes possible, not needed
@@ -9,6 +9,20 @@
 #-# Example 4: ATTRIB.G4B (hd0,0)/recycled
 #-# Example 5: ATTRIB.G4B (hd0,0)/recycled/desktop.ini -h
 #-# Example 6: ATTRIB.G4B (hd0,0)/VOLUME_N.AME
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
 ::----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 :: MAIN ROUTINE
 ::----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -56,9 +70,11 @@ if %bit0%==1 && set r=R ;; if %bit1%==1 && set h=H ;; if %bit2%==1 && set s=S ;;
 #BUG#if %bit0%==1 && set r=R ;; if %bit1%==1 && set s=S ;; if %bit2%==1 && set h=H ;; if %bit3%==1 && set v=V ;; if %bit4%==1 && set d=D ;; if %bit5%==1 && set a=A
 if not %mode%==setattrib && endlocal && set r=%r% && set s=%s% && set h=%h% && set v=%v% && set d=%d% && set a=%a% && goto :eof
 #BAD# Changed attributes of highcase Volume label written as 8+3
-if %mode%==setattrib && if %v%==V && endlocal && set result= && echo -e Volume label '%ENTRY%' found: attributes can not be changed && goto :eof
+if %v%==V && endlocal && set result= && echo -e Volume label '%ENTRY%' found: attributes can not be changed && goto :eof
 if not /i %filesys%==fat32 && if not %entry%>=%root% && endlocal && set result= && goto :eof
 if /i %filesys%==fat32 && if not %entry%>=%dataarea% && endlocal && set result= && goto :eof
+call Fn.11 "%~1" "+-" && endlocal && echo ~1 is not valid && set result= && goto :eof
+call Fn.11 "%~1" "-+" && endlocal && echo ~1 is not valid && set result= && goto :eof
 call Fn.11 "%~1" "+r" && set bit0=1 && set changed=Y
 call Fn.11 "%~1" "-r" && set bit0=0 && set changed=Y
 call Fn.11 "%~1" "+h" && set bit1=1 && set changed=Y
@@ -69,8 +85,10 @@ call Fn.11 "%~1" "+a" && set bit5=1 && set changed=Y
 call Fn.11 "%~1" "-a" && set bit5=0 && set changed=Y
 set /a bit0=1*%bit0% ;; set /a bit1=2*%bit1% ;; set /a bit2=4*%bit2% ;; set /a bit3=8*%bit3% ;; set /a bit4=16*%bit4% ;; set /a bit5=32*%bit5% ;; set /a bit6=64*%bit6%
 set /A addattr2=%bit0%+%bit1%+%bit2%+%bit3%+%bit4%+%bit5%+%bit6%
-if %changed%==Y && set /A attentry=%entry%+0xB &; raw write --offset=%attentry% %device%%0+%totsect% \x%addattr2:~2% > nul && set result=1
-#echo Written attributes to address attentry=%attentry% Value: addattr2=%addattr2% result=%result% file=%name%%%ext% && pause
+if not %entry%>=0x200 && endlocal && echo Abort: unexpected error, please report && set result= && goto :eof
+if %changed%==Y && cat --skip=%entry% --locate="%ENTRY%" --length=11 %device%%0+%devsect% > nul && set check=Y && set /A attentry=%entry%+0xB &; raw write --offset=%attentry% %device%%0+%devsect% \x%addattr2:~2% > nul && set result=1
+#org#if %changed%==Y && set /A attentry=%entry%+0xB &; raw write --offset=%attentry% %device%%0+%devsect% \x%addattr2:~2% > nul && set result=1
+if not %check%==Y && echo Abort: unexpected error, please report && set result=
 endlocal && set result=%result% && set addattr2=%addattr2%
 goto :eof
 
@@ -85,7 +103,8 @@ echo "%path%" > (md)%mdbase%+1
 call Fn.11 "%path%" " " && call :lsspaces
 cat --locate=/ --replace=\x20 (md)%mdbase%+1 > nul
 cat --locate=\x22 --replace=\x20 (md)%mdbase%+1 > nul
-set clusnum=0 && set sfnpath=/ && cat (md)%mdbase%+1 | call :finddirectory
+set clusnum=2 && set sfnpath=/ && cat (md)%mdbase%+1 | call :finddirectory
+#bad?#set clusnum=0 && set sfnpath=/ && cat (md)%mdbase%+1 | call :finddirectory
 endlocal && set clusnum=%clusnum% && set bytedone=%bytedone% && set dirlen=%dirlen% && set entry=%entry% && set sfnfile=%sfnfile% && set sfnpath=%sfnpath% && set lfnentry=%lfnentry%
 goto :eof
 
@@ -112,14 +131,18 @@ if "%1"=="" && goto :eof
 set "argname=%~n1" && set "argext=%~x1"
 set sfnpath=%sfnpath%%%argname%%%argext%/ && set ENTRY= && call :catfile "%~1"
 set /A address=%basemem%+0x1A
+set offset=%bytedone% && set search=%dirlen% && set /A endentry=%bytedone%+%dirlen%-0x20
 :finddirectoryloop
 set entry= && set success= && set argname= && set argext=
-if not exist entry && cat --skip=%bytedone% --locate="%ENTRY%" --length=%dirlen% --number=1 %device%%0+%totsect% | set entry= &; if exist entry && set entry=0x%entry%
-if exist entry && if not %success%==Y && echo -n > (md)%mdbase%+1 && raw dd if=%device%%0+%totsect% of=(md)%mdbase%+1 bs=1 count=0x20 skip=%entry% > nul && set success=Y
-#v0.4#if exist entry && if not %success%==Y && echo -n > (md)%mdbase%+%clussect% && raw dd if=%device%%0+%totsect% of=(md)%mdbase%+1 bs=1 count=0x20 skip=%entry% > nul && set success=Y
+raw cat --skip=%offset% --locate="%ENTRY%" --length=%search% --number=1 %device%%0+%devsect% | set entry= &; if exist entry && set /A entry=0x%entry% &; if %entry%>=%offset% && calc 0x%entry:~-2,2% % 0x20 &; set /A offset=%entry%-%@retval%+0x20 &; if %offset%<=%endentry% && set /A search=%bytedone%-%offset%+%dirlen% && goto :finddirectoryloop ! set entry=
+if exist entry && if not %entry%>=%offset% && echo BAD directory search && goto :eof
+#org#if not exist entry && cat --skip=%bytedone% --locate="%ENTRY%" --length=%dirlen% --number=1 %device%%0+%devsect% | set entry= &; if exist entry && set entry=0x%entry%
+if exist entry && if not %success%==Y && echo -n > (md)%mdbase%+1 && raw dd if=%device%%0+%devsect% of=(md)%mdbase%+1 bs=1 count=0x20 skip=%entry% > nul && set success=Y
+#v0.4#if exist entry && if not %success%==Y && echo -n > (md)%mdbase%+%clussect% && raw dd if=%device%%0+%devsect% of=(md)%mdbase%+1 bs=1 count=0x20 skip=%entry% > nul && set success=Y
 if %success%==Y && if /i %filesys%==fat32 && read %address% &; set /A clusnumL=%@retval%&0xffff &; set clusnumL=0000%clusnumL:~2% && set /A address=%address%-0x6 &; read %address% &; set /A clusnumH=%@retval%&0xffff &; if %clusnumH%==0x0 && set /A clusnum=0x%clusnumL:~-4,4% ! set clusnum=%clusnumH%%%clusnumL:~-4,4%
 if %success%==Y && if not /i %filesys%==fat32 && read %address% &; set /A clusnum=%@retval%&0xffff
-if not exist entry && if exist clusnum && if %bytedone%>=%dataarea% && call :lookupFAT "%clusnum%" &; if %clusnum%>=2 && set /A bytedone=%clusnum% - 0x2 * %clussize% + %dataarea% && set /A dirlen=%clussize% && goto :finddirectoryloop
+if not exist entry && if exist clusnum && if %bytedone%>=%dataarea% && call :lookupFAT "%clusnum%" &; if %clusnum%>=2 && set /A bytedone=%clusnum% - 0x2 * %clussize% + %dataarea% && set /A dirlen=%clussize% &; set offset=%bytedone% && set search=%dirlen% && set /A endentry=%bytedone%+%dirlen%-0x20 && goto :finddirectoryloop
+#org#if not exist entry && if exist clusnum && if %bytedone%>=%dataarea% && call :lookupFAT "%clusnum%" &; if %clusnum%>=2 && set /A bytedone=%clusnum% - 0x2 * %clussize% + %dataarea% && set /A dirlen=%clussize% && goto :finddirectoryloop
 if exist entry && if %success%==Y && set /A bytedone=%clusnum% - 0x2 * %clussize% + %dataarea% && set /A dirlen=%clussize%
 if not %clusnum%==0 && shift ! goto :eof
 goto :finddirectory
@@ -129,13 +152,17 @@ goto :finddirectory
 if "%path%"=="/" && set clusnum=2
 setlocal
 call :catfile "%name%%%ext%"
+set offset=%bytedone% && set search=%dirlen% && set /A endentry=%bytedone%+%dirlen%-0x20
 :findfileloop
 set entry= && set success=
-cat --skip=%bytedone% --locate="%ENTRY%" --length=%dirlen% --number=1 %device%%0+%totsect% | set entry= &; if exist entry && set entry=0x%entry%
-if exist entry && echo -n > (md)%mdbase%+1 && raw dd if=%device%%0+%totsect% of=(md)%mdbase%+1 bs=1 count=0x20 skip=%entry% > nul && set success=Y
+raw cat --skip=%offset% --locate="%ENTRY%" --length=%search% --number=1 %device%%0+%devsect% | set entry= &; if exist entry && set /A entry=0x%entry% &; if %entry%>=%offset% && calc 0x%entry:~-2,2% % 0x20 &; set /A offset=%entry%-%@retval%+0x20 &; if %offset%<=%endentry% && set /A search=%bytedone%-%offset%+%dirlen% && goto :findfileloop ! set entry=
+if exist entry && if not %entry%>=%offset% && endlocal && echo BAD file search && goto :eof
+#org#cat --skip=%bytedone% --locate="%ENTRY%" --length=%dirlen% --number=1 %device%%0+%devsect% | set entry= &; if exist entry && set entry=0x%entry%
+if exist entry && echo -n > (md)%mdbase%+1 && raw dd if=%device%%0+%devsect% of=(md)%mdbase%+1 bs=1 count=0x20 skip=%entry% > nul && set success=Y
 #notneeded#if %success%==Y && if /i %filesys%==fat32 && read %address% &; set /A clusnumL=%@retval%&0xffff &; set clusnumL=0000%clusnumL:~2% && set /A address=%address%-0x6 &; read %address% &; set /A clusnumH=%@retval%&0xffff &; if %clusnumH%==0x0 && set /A clusnum=0x%clusnumL:~-4,4% ! set clusnum=%clusnumH%%%clusnumL:~-4,4%
 #notneeded#if %success%==Y && if not /i %filesys%==fat32 && read %address% &; set /A clusnum=%@retval%&0xffff
-if not exist entry && if %bytedone%>=%dataarea% && if exist clusnum &; call :lookupFAT "%clusnum%" &; if %clusnum%>=2 && set /A bytedone=%clusnum% - 0x2 * %clussize% + %dataarea% && set /A dirlen=%clussize% && goto :findfileloop
+if not exist entry && if %bytedone%>=%dataarea% && if exist clusnum &; call :lookupFAT "%clusnum%" &; if %clusnum%>=2 && set /A bytedone=%clusnum% - 0x2 * %clussize% + %dataarea% && set /A dirlen=%clussize% &; set offset=%bytedone% && set search=%dirlen% && set /A endentry=%bytedone%+%dirlen%-0x20 && goto :findfileloop
+#org#if not exist entry && if %bytedone%>=%dataarea% && if exist clusnum &; call :lookupFAT "%clusnum%" &; if %clusnum%>=2 && set /A bytedone=%clusnum% - 0x2 * %clussize% + %dataarea% && set /A dirlen=%clussize% && goto :findfileloop
 endlocal && set clusnum=%clusnum% && set bytedone=%bytedone% && set dirlen=%dirlen% && set entry=%entry% && set ENTRY=%ENTRY% && set sfnpath=%sfnpath% && set lastclus=%lastclus% && set success=%success%
 goto :eof
 
@@ -176,8 +203,8 @@ goto :eof
 
 :readdisk
 #-# read Little-Endian 32-bit values, output in hex (Big-Endian)
-setlocal && set * && set device=%device% && set totsect=%totsect%
-cat --hex --skip=%~1 --length=4 %device%%0+%totsect% | set litleend=
+setlocal && set * && set device=%device% && set devsect=%devsect%
+cat --hex --skip=%~1 --length=4 %device%%0+%devsect% | set litleend=
 set LE=%litleend:~10,11% &; set result=0x%LE:~9,2%%%LE:~6,2%%%LE:~3,2%%%LE:~0,2%
 endlocal && set result=%result%
 goto :eof
@@ -205,6 +232,7 @@ dd if=%device%%0+1 of=(md)%mdbase%+1 > nul
 set /A base=%mdbase% * 0x200
 set /A address=%base%+0xB
 read %address% > nul &; set /A bytepsec=%@retval%&0xffff
+calc %bytepsec% % 0x200 && endlocal && echo %bytepsec% Bytes per sector not supported on %filesys% && set result= && goto :eof
 set /A address=%base%+0xD
 read %address% > nul ;; set /A secpclus=%@retval%&0xff
 set /A address=%base%+0xE
@@ -215,6 +243,9 @@ set /A address=%base%+0x11
 read %address% > nul ;; set /A rootentr=%@retval%&0xffff
 set /A address=%base%+0x13
 read %address% > nul ;; set /A totsect=%@retval%&0xffff
+set /A address=%base%+0x15
+read %address% > nul ;; set /A mediabyt=%@retval%&0xff
+checkrange 0xF0:0xFF calc %mediabyt% || endlocal && set filesys= && echo Mediabyte %mediabyt% is not valid && set result= && goto :eof
 set /A address=%base%+0x16
 read %address% > nul ;; set /A secpfat=%@retval%&0xffff
 if %totsect%==0 && set /A address=%base%+0x20
@@ -228,7 +259,9 @@ if not /i %filesys%==fat32 && set /A root=%fatbyte% + %rsrvbyte%
 set /A dataarea=%rootbyte% + %fatbyte% + %rsrvbyte%
 set /A clussize=%secpclus% * %bytepsec%
 set /A fat1=%rsrvbyte%
-endlocal && set dataarea=%dataarea% && set clussize=%clussize% && set root=%root% && set fat1=%fat1% && set totsect=%totsect% && set secpclus=%secpclus%
+if exist fat1 && cat --skip=%fat1% --locate=\x%mediabyt:~2% --length=1 %device%%0+%totsect% > nul || endlocal && set filesys= && echo Mediabyte %mediabyt% in fat1 does not match && set result= && goto :eof
+#NOTUSED#if exist fat2 && cat --skip=%fat2% --locate=\x%mediabyt:~2% --length=1 %device%%0+%totsect% > nul || endlocal && set filesys= && set "message=Mediabyte %mediabyt% in fat1 does not match" && goto :eof
+endlocal && set dataarea=%dataarea% && set clussize=%clussize% && set root=%root% && set fat1=%fat1% && set devsect=%totsect% && set secpclus=%secpclus%
 goto :eof
 
 :checksfn
@@ -303,7 +336,7 @@ echo -n > (md)%mdbase%+1
 endlocal && set SFN=%SFN% && goto :eof
 
 :help
-echo ATTRIB.G4B v0.4.3 (20220526), by deomsh
+echo ATTRIB.G4B v0.4.4 (20220513), by deomsh
 echo Function: get/ set attributes (FAT-devices only)
 echo Use: ATTRIB.G4B <FILE> [<+/-attribute(s)>]
 echo Remarks: If source device/ path is not given: on root. Short Names in PATH and FILE only! Spaces between set-attributes possible, not needed
