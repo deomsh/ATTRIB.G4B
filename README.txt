@@ -5,7 +5,7 @@ Special case: Volume Name (attribute 'V') if Volume-name is given in 8+3 File-na
 
 Help shown with: ATTRIB.G4B
 
-ATTRIB.G4B v0.4.3 (20220526), by deomsh
+ATTRIB.G4B v0.4.4 (20220613), by deomsh
 
 Function: get/ set attributes (FAT-devices only)
 
