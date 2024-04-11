@@ -32,3 +32,19 @@ Get: with ATTRIB.G4B <FILE> echos FILE-/ DIRECTORY-NAME and file/ directory attr
 Set: with ATTRIB.G4B <FILE> <+/-attribute(s)> variable 'result=1' if successfull, no result if not successfull + echo
   
 Short descritions of each sub-routine at start of each (sub-routine :lsspaces probably unused in case of SFN)
+
+HISTORY
+v0.4.4
+Bugfix
+v0.4.3
+Volume Name will return 'V' if Volume-name (Label) is given in 8+3 File-name format. High-case labels supported only!
+Correction: no possibility to change attributes (A R S H) anymore on high-case Volume Names if Volume-name given in 8+3 format
+v0.4.2
+Changed output-echo of found file-attributes to dos collumn-style
+Corrected non-problematic error in sub-routine :finddirectory (was line 106)
+Little bit faster detection of FAT file-system
+v0.4.1
+Bugfix
+Added echo's if PATH or ENTRY is not found or of attribute(s) can not be changed
+v0.4
+First published version: deleted because of BAD bug
