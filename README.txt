@@ -5,7 +5,7 @@ Special case: Volume Name (attribute 'V') if Volume-name is given in 8+3 File-na
 
 Help shown with: ATTRIB.G4B
 
-ATTRIB.G4B v0.4.4 (20220613), by deomsh
+ATTRIB.G4B v0.4.5 (20241018), by deomsh
 
 Function: get/ set attributes (FAT-devices only)
 
@@ -34,6 +34,9 @@ Set: with ATTRIB.G4B <FILE> <+/-attribute(s)> variable 'result=1' if successfull
 Short descritions of each sub-routine at start of each (sub-routine :lsspaces probably unused in case of SFN)
 
 HISTORY
+v0.4.5
+New: compatible with one File Allocation Table (number of FAT's = 1)
+
 v0.4.4
 Bugfix
 
