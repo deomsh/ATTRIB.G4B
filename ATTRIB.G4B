@@ -1,5 +1,5 @@
 !BAT
-#-#+ ATTRIB.G4B v0.4.5 (20241018), by deomsh
+#-#+ ATTRIB.G4B v0.4.6 (20250827), by deomsh
 #-#+ Function: get/ set attributes (FAT-devices only)
 #-#+ Use: ATTRIB.G4B <FILE> [<+/-attribute(s)>]
 #-#+ Remarks: If source device/ path is not given: on root. Short Names in PATH and FILE only! Spaces between set-attributes possible, not needed
@@ -9,9 +9,24 @@
 #-# Example 4: ATTRIB.G4B (hd0,0)/recycled
 #-# Example 5: ATTRIB.G4B (hd0,0)/recycled/desktop.ini -h
 #-# Example 6: ATTRIB.G4B (hd0,0)/VOLUME_N.AME
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
+#-# ...
 ::----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 :: MAIN ROUTINE
 ::----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+if not exist @uefi &; setlocal && set /a version=*0x8278&0xFFFFFFFF > nul &; if %version%>=20170505 && endlocal ! echo Grub4dos version %version% too old, use version 20170505 or later && endlocal && goto :eof
 if "%~1"=="" && call :help && goto :eof
 setlocal && set /a version=*0x8278&0xFFFFFFFF > nul &; if %version%>=20170607 && endlocal ! echo Grub4dos version %version% too old, use version 20170607 or later && endlocal && goto :eof
 setlocal && set *
@@ -58,11 +73,9 @@ setlocal
 set /A address=%basemem%+0xB &; read %address% ;; set /A attrib=%@retval%&0xff
 set /a bit0=%attrib%&1 ;; set /A attrib=%attrib%>>1 ;; set /a bit1=%attrib%&1 ;; set /A attrib=%attrib%>>1 ;; set /a bit2=%attrib%&1 ;; set /A attrib=%attrib%>>1 ;; set /a bit3=%attrib%&1 ;; set /A attrib=%attrib%>>1 ;; set /a bit4=%attrib%&1 ;; set /A attrib=%attrib%>>1 ;; set /a bit5=%attrib%&1 ;; set /A attrib=%attrib%>>1 ;; set /a bit6=%attrib%&1
 if %bit0%==1 && set r=R ;; if %bit1%==1 && set h=H ;; if %bit2%==1 && set s=S ;; if %bit3%==1 && set v=V ;; if %bit4%==1 && set d=D ;; if %bit5%==1 && set a=A
-#BUG#if %bit0%==1 && set r=R ;; if %bit1%==1 && set s=S ;; if %bit2%==1 && set h=H ;; if %bit3%==1 && set v=V ;; if %bit4%==1 && set d=D ;; if %bit5%==1 && set a=A
 set /u SWITCH=%~1
 if not exist v &; call Fn.11 "%SWITCH%" "V" && endlocal && echo -e -n Switch '%SWITCH%' is not valid.\x20 && set result= && goto :eof
 if not %mode%==setattrib && endlocal && set r=%r% && set s=%s% && set h=%h% && set v=%v% && set d=%d% && set a=%a% && goto :eof
-#BAD# Changed attributes of highcase Volume label written as 8+3
 if %v%==V && endlocal && set result= && echo -e -n Volume label '%ENTRY%' found: attributes can not be changed.\x20 && goto :eof
 if not /i %filesys%==fat32 && if not %entry%>=%root% && endlocal && set result= && goto :eof
 if /i %filesys%==fat32 && if not %entry%>=%dataarea% && endlocal && set result= && goto :eof
@@ -188,10 +201,7 @@ goto :eof
 #-# read Little-Endian 32-bit values, output in hex (Big-Endian)
 setlocal && set * && set device=%device% && set devsect=%devsect% &; set /A skip=%~1 &; set /a s=%@retval%
 raw cat --hex --skip=%skip% --length=4 %device%%0+%devsect% | set LE= &; if %s%<=10 && set "LE=%LE:~10,11%" ! call set "LE=%^LE:~%s%,11%" &; if "%LE:~0,1%"==" " && set "LE=%LE:~1%"
-#ORG#cat --hex --skip=%~1 --length=4 %device%%0+%devsect% | set le=
-#NotSeen#echo %0 LE=%LE%
 if not "%LE:~9,1%"==" " && set result=0x%LE:~9,2%%%LE:~6,2%%%LE:~3,2%%%LE:~0,2% ! if not "%LE:~6,1%"==" " && set result=0x%LE:~6,2%%%LE:~3,2%%%LE:~0,2% ! if not "%LE:~3,1%"==" " && set result=0x%LE:~3,2%%%LE:~0,2% ! if not "%LE:~0,1%"==" " && set result=0x%LE:~0,2%
-#org#set LE=%litleend:~10,11% &; set result=0x%LE:~9,2%%%LE:~6,2%%%LE:~3,2%%%LE:~0,2%
 endlocal && set result=%result%
 goto :eof
 ::
@@ -205,7 +215,6 @@ debug msg=1
 if exist device && vol %device% > (md)%mdbase%+1
 debug msg=0
 if exist device && cat --locate=\x0A --number=1 (md)%mdbase%+1 > nul &; set /a skip=%?% &; set filesys=fat12 &; cat --skip=%skip% --locate=%filesys% (md)%mdbase%+1 > nul |; set filesys=fat16 &; cat --skip=%skip% --locate=%filesys% (md)%mdbase%+1 > nul |; set filesys=fat32 &; cat --skip=%skip% --locate=%filesys% (md)%mdbase%+1 > nul |; set filesys=initrdfs &; cat --skip=%skip% --locate=%filesys% (md)%mdbase%+1 > nul |; set filesys=
-#BAD#if exist device && set filesys=fat12 &; cat --locatei=%filesys% (md)%mdbase%+1 > nul |; set filesys=fat16 &; cat --locatei=%filesys% (md)%mdbase%+1 > nul |; set filesys=fat32 &; cat --locatei=%filesys% (md)%mdbase%+1 > nul |; set filesys=initrdfs &; cat --locatei=%filesys% (md)%mdbase%+1 > nul |; set filesys=
 endlocal && set filesys=%filesys%
 goto :eof
 ::
@@ -218,7 +227,7 @@ dd if=%device%%0+1 of=(md)%mdbase%+1 > nul
 set /A base=%mdbase% * 0x200
 set /A address=%base%+0xB
 read %address% > nul &; set /A bytepsec=%@retval%&0xffff
-calc %bytepsec% % 0x200 && endlocal && echo %bytepsec% Bytes per sector not supported on %filesys% && set result= && goto :eof
+calc %bytepsec% % 0x200 && endlocal && echo %bytepsec% Bytes per sector not supported on %filesys% && set result=0 && goto :eof
 set /A address=%base%+0xD
 read %address% > nul ;; set /A secpclus=%@retval%&0xff
 set /A address=%base%+0xE
@@ -233,13 +242,14 @@ set /A address=%base%+0x13
 read %address% > nul ;; set /A totsect=%@retval%&0xffff
 set /A address=%base%+0x15
 read %address% > nul ;; set /A mediabyt=%@retval%&0xff
-checkrange 0xF0:0xFF calc %mediabyt% || endlocal && set filesys= && echo Mediabyte %mediabyt% is not valid && set result= && goto :eof
+checkrange 0xF0:0xFF calc %mediabyt% || endlocal && set filesys= && echo Mediabyte %mediabyt% is not valid && set result=0 && goto :eof
 set /A address=%base%+0x16
 read %address% > nul ;; set /A secpfat=%@retval%&0xffff
 if %totsect%==0 && set /A address=%base%+0x20
 if %totsect%==0 && read %address% > nul &; set /A totsect=%@retval%&0xffffffff
 if %secpfat%==0 && if /i %filesys%==fat32 && set /A address=%base%+0x24
-if %secpfat%==0 && if /i %filesys%==fat32 && read %address% > nul &; set /A secpfat=%@retval%&0xffff
+if %secpfat%==0 && if /i %filesys%==fat32 && read %address% > nul &; set /A secpfat=%@retval%&0xffffffff
+#BAD:16bits#if %secpfat%==0 && if /i %filesys%==fat32 && read %address% > nul &; set /A secpfat=%@retval%&0xffff
 set /A rootbyte=%rootentr% * 32
 set /A fatbyte=%numfats% * %secpfat% * %bytepsec%
 set /A rsrvbyte=%reserved% * %bytepsec%
@@ -247,7 +257,7 @@ if not /i %filesys%==fat32 && set /A root=%fatbyte% + %rsrvbyte%
 set /A dataarea=%rootbyte% + %fatbyte% + %rsrvbyte%
 set /A clussize=%secpclus% * %bytepsec%
 set /A fat1=%rsrvbyte%
-if exist fat1 && cat --skip=%fat1% --locate=\x%mediabyt:~2% --length=1 %device%%0+%totsect% > nul || endlocal && set filesys= && echo Mediabyte %mediabyt% in fat1 does not match && set result= && goto :eof
+if exist fat1 && cat --skip=%fat1% --locate=\x%mediabyt:~2% --length=1 %device%%0+%totsect% > nul || endlocal && set filesys= && echo Mediabyte %mediabyt% in fat1 does not match && set result=0 && goto :eof
 #NOTUSED#if exist fat2 && cat --skip=%fat2% --locate=\x%mediabyt:~2% --length=1 %device%%0+%totsect% > nul || endlocal && set filesys= && set "message=Mediabyte %mediabyt% in fat1 does not match" && goto :eof
 endlocal && set dataarea=%dataarea% && set clussize=%clussize% && set root=%root% && set fat1=%fat1% && set devsect=%totsect% && set secpclus=%secpclus%
 goto :eof
@@ -308,6 +318,7 @@ cat --locate=; (md)%mdbase%+1 > nul && set SFN=N && echo -n $[0x0F]; in 8+3 %tes
 cat --locate=< (md)%mdbase%+1 > nul && set SFN=N && echo -n $[0x0F]< in 8+3 %test%name is forbidden &; endlocal && set SFN=%SFN% && goto :eof
 cat --locate=> (md)%mdbase%+1 > nul && set SFN=N && echo -n $[0x0F]> in 8+3 %test%name is forbidden &; endlocal && set SFN=%SFN% && goto :eof
 cat --locate=? (md)%mdbase%+1 > nul && set SFN=N && echo -n $[0x0F]? in 8+3 %test%name is forbidden &; endlocal && set SFN=%SFN% && goto :eof
+#ORG#cat --locate=! (md)%mdbase%+1 > nul && set SFN=N && echo -n $[0x0F]'!' in 8+3 %test%name not alowed here &; endlocal && set SFN=%SFN% && goto :eof
 cat --locate=[ (md)%mdbase%+1 > nul && set SFN=N && echo -n $[0x0F][ in 8+3 %test%name is forbidden &; endlocal && set SFN=%SFN% && goto :eof
 cat --locate=] (md)%mdbase%+1 > nul && set SFN=N && echo -n $[0x0F]] in 8+3 %test%name is forbidden &; endlocal && set SFN=%SFN% && goto :eof
 cat --locate=| (md)%mdbase%+1 > nul && set SFN=N && echo -n $[0x0F]| in 8+3 %test%name is forbidden &; endlocal && set SFN=%SFN% && goto :eof
@@ -324,7 +335,7 @@ endlocal && set SFN=%SFN%
 goto :eof
 ::
 :help
-echo ATTRIB.G4B v0.4.5 (20241018), by deomsh
+echo ATTRIB.G4B v0.4.6 (20250827), by deomsh
 echo Function: get/ set attributes (FAT-devices only)
 echo Use: ATTRIB.G4B <FILE> [<+/-attribute(s)>]
 echo Remarks: If source device/ path is not given: on root. Short Names in PATH and FILE only! Spaces between set-attributes possible, not needed
